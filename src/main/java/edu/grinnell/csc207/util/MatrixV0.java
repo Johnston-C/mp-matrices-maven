@@ -405,8 +405,14 @@ public class MatrixV0<T> implements Matrix<T> {
    *
    * @return a copy of the matrix.
    */
-  public Matrix clone() {
-    return this;        // STUB
+  public Matrix<T> clone() {
+    MatrixV0<T> output = new MatrixV0<T>(width(), height(), this.defOut);
+    for (int r = 0; r < height(); r++) {
+      for (int c = 0; c < width(); c++) {
+        output.set(r, c, get(r, c));
+      } // for [c]
+    } // for [r]
+    return output;
   } // clone()
 
   /**
@@ -418,9 +424,10 @@ public class MatrixV0<T> implements Matrix<T> {
    * @return true if the other object is a matrix with the same width,
    * height, and equal elements; false otherwise.
    */
+  @SuppressWarnings({ "unchecked" })
   public boolean equals(Object other) {
-    if ((other instanceof Matrix) && (other instanceof MatrixV0)) {
-      MatrixV0<?> otherAs = (MatrixV0<?>) other;
+    if (other.getClass().equals(this.getClass())) {
+      MatrixV0<T> otherAs = (MatrixV0<T>) other;
       if ((width() == otherAs.width()) && (height() == otherAs.height())) {
         for (int r = 0; r < width(); r++) {
           for (int c = 0; c < height(); c++) {
@@ -433,8 +440,9 @@ public class MatrixV0<T> implements Matrix<T> {
       } else {
         return false;
       } // if / else
-    } // if
-    return false;
+    } else {
+      return false;
+    } // if / else
   } // equals(Object)
 
   /**
