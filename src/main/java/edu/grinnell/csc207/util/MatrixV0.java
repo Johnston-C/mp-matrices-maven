@@ -1,5 +1,7 @@
 package edu.grinnell.csc207.util;
 
+import java.util.Arrays;
+
 /**
  * An implementation of two-dimensional matrices.
  *
@@ -13,6 +15,18 @@ public class MatrixV0<T> implements Matrix<T> {
   // +--------+------------------------------------------------------
   // | Fields |
   // +--------+
+
+  /** The contents of this matrix. */
+  T[][] contents;
+
+  /** The height of this matrix. */
+  int h;
+
+  /** The width of this matrix. */
+  int w;
+
+  /** The default value of this matrix. */
+  T defOut;
 
   // +--------------+------------------------------------------------
   // | Constructors |
@@ -32,8 +46,15 @@ public class MatrixV0<T> implements Matrix<T> {
    * @throws NegativeArraySizeException
    *   If either the width or height are negative.
    */
+  @SuppressWarnings({ "unchecked" })
   public MatrixV0(int width, int height, T def) {
-    // STUB
+    this.w = width;
+    this.h = height;
+    this.defOut = def;
+    this.contents = (T[][]) new Object[height()][];
+    for (int i = 0; i < height(); i++) {
+      initializeRow(i);
+    } // for [i]
   } // MatrixV0(int, int, T)
 
   /**
@@ -70,7 +91,11 @@ public class MatrixV0<T> implements Matrix<T> {
    *   If either the row or column is out of reasonable bounds.
    */
   public T get(int row, int col) {
-    return null;        // STUB
+    if (isIndex(row, col)) {
+      return this.contents[row][col];
+    } else {
+      throw new IndexOutOfBoundsException("Indecies exceed bounds of array.");
+    } // if / else
   } // get(int, int)
 
   /**
@@ -87,7 +112,11 @@ public class MatrixV0<T> implements Matrix<T> {
    *   If either the row or column is out of reasonable bounds.
    */
   public void set(int row, int col, T val) {
-    // STUB
+    if (isIndex(row, col)) {
+      this.contents[row][col] = val;
+    } else {
+      throw new IndexOutOfBoundsException("Indecies exceed bounds of array.");
+    } // if / else
   } // set(int, int, T)
 
   /**
@@ -96,7 +125,7 @@ public class MatrixV0<T> implements Matrix<T> {
    * @return the number of rows.
    */
   public int height() {
-    return 5;   // STUB
+    return this.h;
   } // height()
 
   /**
@@ -105,7 +134,7 @@ public class MatrixV0<T> implements Matrix<T> {
    * @return the number of columns.
    */
   public int width() {
-    return 3;   // STUB
+    return this.w;
   } // width()
 
   /**
@@ -118,7 +147,14 @@ public class MatrixV0<T> implements Matrix<T> {
    *   If the row is negative or greater than the height.
    */
   public void insertRow(int row) {
-    // STUB
+    if (isClamped(row, 0, height() + 1)) {
+      this.h++;
+      this.contents = Arrays.copyOf(this.contents, height());
+      initializeRow(height() - 1);
+      bubbleRow(height() - 1, row);
+    } else {
+      throw new IndexOutOfBoundsException("Index exceeds bounds of array.");
+    } // if / else
   } // insertRow(int)
 
   /**
@@ -135,7 +171,14 @@ public class MatrixV0<T> implements Matrix<T> {
    *   If the size of vals is not the same as the width of the matrix.
    */
   public void insertRow(int row, T[] vals) throws ArraySizeException {
-    // STUB
+    if (vals.length == width()) {
+      insertRow(row);
+      for (int c = 0; c < width(); c++) {
+        set(row, c, vals[c]);
+      } // for [c]
+    } else {
+      throw new ArraySizeException("Length of values does not match width.");
+    } // if / else
   } // insertRow(int, T[])
 
   /**
@@ -148,7 +191,16 @@ public class MatrixV0<T> implements Matrix<T> {
    *   If the column is negative or greater than the width.
    */
   public void insertCol(int col) {
-    // STUB
+    if (isClamped(col, 0, width() + 1)) {
+      this.w++;
+      for (int r = 0; r < height(); r++) {
+        this.contents[r] = Arrays.copyOf(this.contents[r], width());
+      } // for [r]
+      initializeCol(width() - 1);
+      bubbleCol(width() - 1, col);
+    } else {
+      throw new IndexOutOfBoundsException("Index exceeds bounds of array.");
+    } // if / else
   } // insertCol(int)
 
   /**
@@ -165,7 +217,14 @@ public class MatrixV0<T> implements Matrix<T> {
    *   If the size of vals is not the same as the height of the matrix.
    */
   public void insertCol(int col, T[] vals) throws ArraySizeException {
-    // STUB
+    if (vals.length == height()) {
+      insertCol(col);
+      for (int r = 0; r < height(); r++) {
+        set(r, col, vals[r]);
+      } // for [r]
+    } else {
+      throw new ArraySizeException("Length of values does not match width.");
+    } // if / else
   } // insertCol(int, T[])
 
   /**
@@ -178,7 +237,13 @@ public class MatrixV0<T> implements Matrix<T> {
    *   If the row is negative or greater than or equal to the height.
    */
   public void deleteRow(int row) {
-    // STUB
+    if (isClamped(row, 0, height())) {
+      bubbleRow(row, height() - 1);
+      this.h--;
+      this.contents = Arrays.copyOf(this.contents, height());
+    } else {
+      throw new IndexOutOfBoundsException("Index exceeds bounds of array.");
+    } // if / else
   } // deleteRow(int)
 
   /**
@@ -191,8 +256,68 @@ public class MatrixV0<T> implements Matrix<T> {
    *   If the column is negative or greater than or equal to the width.
    */
   public void deleteCol(int col) {
-    // STUB
+    if (isClamped(col, 0, width())) {
+      bubbleCol(col, width() - 1);
+      this.w--;
+      for (int r = 0; r < height(); r++) {
+        this.contents[r] = Arrays.copyOf(this.contents[r], width());
+      } // for [r]
+    } else {
+      throw new IndexOutOfBoundsException("Index exceeds bounds of array.");
+    } // if / else
   } // deleteCol(int)
+
+  /**
+   * Reset a row and fills it with the default value.
+   *
+   * @param row
+   */
+  @SuppressWarnings({ "unchecked" })
+  private void initializeRow(int row) {
+    this.contents[row] = (T[]) new Object[width()];
+    fillLine(row, 0, 0, 1, height(), width(), this.defOut);
+  } // initializeRow(int)
+
+  private void bubbleRow(int targetRow, int destination) {
+    T[] tempRow;
+    int delta;
+    if (destination > targetRow) {
+      delta = 1;
+    } else {
+      delta = -1;
+    } // if / else
+    for (int r = targetRow; r != destination; r += delta) {
+      tempRow = this.contents[r];
+      this.contents[r] = this.contents[r + delta];
+      this.contents[r + delta] = tempRow;
+    } // for [r]
+  } // bubbleRow(int, int)
+
+  /**
+   * Reset a col and fills it with the default value.
+   *
+   * @param col
+   */
+  private void initializeCol(int col) {
+    fillLine(0, col, 1, 0, height(), width(), this.defOut);
+  } // initializeCol(int)
+
+  private void bubbleCol(int targetCol, int destination) {
+    T tempVal;
+    int delta;
+    if (destination > targetCol) {
+      delta = 1;
+    } else {
+      delta = -1;
+    } // if / else
+    for (int c = targetCol; c != destination; c += delta) {
+      for (int r = 0; r < height(); r++) {
+        tempVal = this.contents[r][c];
+        this.contents[r][c] = this.contents[r][c + delta];
+        this.contents[r][c + delta] = tempVal;
+      } // for [r]
+    } // for [c]
+  } // bubbleCol(int, int)
 
   /**
    * Fill a rectangular region of the matrix.
@@ -213,7 +338,25 @@ public class MatrixV0<T> implements Matrix<T> {
    */
   public void fillRegion(int startRow, int startCol, int endRow, int endCol,
       T val) {
-    // STUB
+    int deltaR;
+    int deltaC;
+    if (endRow > startRow) {
+      deltaR = 1;
+    } else {
+      deltaR = -1;
+    } // if / else
+    if (endCol > startCol) {
+      deltaC = 1;
+    } else {
+      deltaC = -1;
+    } // if / else
+    if (makeBounds(startRow, startCol, endRow, endCol)) {
+      for (int r = startRow; r != endRow; r += deltaR) {
+        fillLine(r, startCol, 0, deltaC, width(), endCol, val);
+      } // for [r]
+    } else {
+      throw new IndexOutOfBoundsException("Indecies exceed bounds of array.");
+    } // if / else
   } // fillRegion(int, int, int, int, T)
 
   /**
@@ -239,7 +382,20 @@ public class MatrixV0<T> implements Matrix<T> {
    */
   public void fillLine(int startRow, int startCol, int deltaRow, int deltaCol,
       int endRow, int endCol, T val) {
-    // STUB
+    if (makeBounds(startRow, startCol, endRow, endCol)) {
+      if ((deltaRow == 0) && (deltaCol == 0)) {
+        set(startRow, startCol, val);
+      } else {
+        int n = 0;
+        while (isClamped(startRow + n * deltaRow, startRow, endRow)
+               && isClamped(startCol + n * deltaCol, startCol, endCol)) {
+          set(startRow + n * deltaRow, startCol + n * deltaCol, val);
+          n++;
+        } // while
+      } // if / else
+    } else {
+      throw new IndexOutOfBoundsException("Indecies exceed bounds of array.");
+    } // if / else
   } // fillLine(int, int, int, int, int, int, T)
 
   /**
@@ -263,7 +419,22 @@ public class MatrixV0<T> implements Matrix<T> {
    * height, and equal elements; false otherwise.
    */
   public boolean equals(Object other) {
-    return this == other;       // STUB
+    if ((other instanceof Matrix) && (other instanceof MatrixV0)) {
+      MatrixV0<?> otherAs = (MatrixV0<?>) other;
+      if ((width() == otherAs.width()) && (height() == otherAs.height())) {
+        for (int r = 0; r < width(); r++) {
+          for (int c = 0; c < height(); c++) {
+            if (!(this.contents[r][c].equals(otherAs.contents[r][c]))) {
+              return false;
+            } // if
+          } // for [c]
+        } // for [r]
+        return true;
+      } else {
+        return false;
+      } // if / else
+    } // if
+    return false;
   } // equals(Object)
 
   /**
@@ -288,4 +459,67 @@ public class MatrixV0<T> implements Matrix<T> {
     } // for row
     return code;
   } // hashCode()
+
+  /**
+   * Checks if a pair of coordinates makes a valid bounded area
+   * within the matrix.
+   *
+   * @param startRow
+   *   The inclusive row
+   * @param startCol
+   *   The inclusive column
+   * @param endRow
+   *   The exclusive row
+   * @param endCol
+   *   The exclusive column
+   * @return If the coordinates make a valid bounded area.
+   */
+  private boolean makeBounds(int startRow, int startCol, int endRow, int endCol) {
+    int deltaR;
+    int deltaC;
+    if (endRow > startRow) {
+      deltaR = 1;
+    } else {
+      deltaR = -1;
+    } // if / else
+    if (endCol > startCol) {
+      deltaC = 1;
+    } else {
+      deltaC = -1;
+    } // if / else
+    return (isIndex(startRow, startCol) && isIndex(endRow - deltaR, endCol - deltaC));
+  } // makeBounds(int, int, int, int)
+
+  /**
+   * Checks if a set of coordinates reference a valid index.
+   * 
+   * @param row
+   *   The row part of the index.
+   * @param col
+   *   The column part of the index.
+   * @return If the coordinates reference a valid index.
+   */
+  private boolean isIndex(int row, int col) {
+    return (isClamped(row, 0, height()) && isClamped(col, 0, width()));
+  } // isIndex(int, int)
+
+  /**
+   * Determine if an integer is between two integers, first
+   * inclusive, second exclusive.
+   *
+   * @param arg
+   *   The integer to check.
+   * @param floor
+   *   The inclusive parameter.
+   * @param ceil
+   *   The exclusive parameter.
+   * @return If the arg is between the two other integers.
+   */
+  private boolean isClamped(int arg, int floor, int ceil) {
+    if (floor < ceil) {
+      return ((arg >= floor) && (arg < ceil));
+    } else {
+      return ((arg <= floor) && (arg > ceil));
+    } // if / else
+  } // isClamped(int, int, int)
 } // class MatrixV0
