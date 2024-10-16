@@ -147,7 +147,7 @@ public class MatrixV0<T> implements Matrix<T> {
    *   If the row is negative or greater than the height.
    */
   public void insertRow(int row) {
-    if (isClamped(row, 0, height() + 1)) {
+    if (isBound(row, 0, height() + 1)) {
       this.h++;
       this.contents = Arrays.copyOf(this.contents, height());
       initializeRow(height() - 1);
@@ -191,7 +191,7 @@ public class MatrixV0<T> implements Matrix<T> {
    *   If the column is negative or greater than the width.
    */
   public void insertCol(int col) {
-    if (isClamped(col, 0, width() + 1)) {
+    if (isBound(col, 0, width() + 1)) {
       this.w++;
       for (int r = 0; r < height(); r++) {
         this.contents[r] = Arrays.copyOf(this.contents[r], width());
@@ -237,7 +237,7 @@ public class MatrixV0<T> implements Matrix<T> {
    *   If the row is negative or greater than or equal to the height.
    */
   public void deleteRow(int row) {
-    if (isClamped(row, 0, height())) {
+    if (isBound(row, 0, height())) {
       bubbleRow(row, height() - 1);
       this.h--;
       this.contents = Arrays.copyOf(this.contents, height());
@@ -256,7 +256,7 @@ public class MatrixV0<T> implements Matrix<T> {
    *   If the column is negative or greater than or equal to the width.
    */
   public void deleteCol(int col) {
-    if (isClamped(col, 0, width())) {
+    if (isBound(col, 0, width())) {
       bubbleCol(col, width() - 1);
       this.w--;
       for (int r = 0; r < height(); r++) {
@@ -352,7 +352,7 @@ public class MatrixV0<T> implements Matrix<T> {
     } // if / else
     if (makeBounds(startRow, startCol, endRow, endCol)) {
       for (int r = startRow; r != endRow; r += deltaR) {
-        fillLine(r, startCol, 0, deltaC, width(), endCol, val);
+        fillLine(r, startCol, 0, deltaC, height(), endCol, val);
       } // for [r]
     } else {
       throw new IndexOutOfBoundsException("Indecies exceed bounds of array.");
@@ -387,8 +387,8 @@ public class MatrixV0<T> implements Matrix<T> {
         set(startRow, startCol, val);
       } else {
         int n = 0;
-        while (isClamped(startRow + n * deltaRow, startRow, endRow)
-               && isClamped(startCol + n * deltaCol, startCol, endCol)) {
+        while (isBound(startRow + n * deltaRow, startRow, endRow)
+               && isBound(startCol + n * deltaCol, startCol, endCol)) {
           set(startRow + n * deltaRow, startCol + n * deltaCol, val);
           n++;
         } // while
@@ -426,12 +426,12 @@ public class MatrixV0<T> implements Matrix<T> {
    */
   @SuppressWarnings({ "unchecked" })
   public boolean equals(Object other) {
-    if (other.getClass().equals(this.getClass())) {
-      MatrixV0<T> otherAs = (MatrixV0<T>) other;
+    if (other instanceof Matrix) {
+      Matrix<Object> otherAs = (Matrix<Object>) other;
       if ((width() == otherAs.width()) && (height() == otherAs.height())) {
-        for (int r = 0; r < width(); r++) {
-          for (int c = 0; c < height(); c++) {
-            if (!(this.contents[r][c].equals(otherAs.contents[r][c]))) {
+        for (int r = 0; r < height(); r++) {
+          for (int c = 0; c < width(); c++) {
+            if (!(this.get(r, c).equals(otherAs.get(r, c)))) {
               return false;
             } // if
           } // for [c]
@@ -500,7 +500,7 @@ public class MatrixV0<T> implements Matrix<T> {
 
   /**
    * Checks if a set of coordinates reference a valid index.
-   * 
+   *
    * @param row
    *   The row part of the index.
    * @param col
@@ -508,7 +508,7 @@ public class MatrixV0<T> implements Matrix<T> {
    * @return If the coordinates reference a valid index.
    */
   private boolean isIndex(int row, int col) {
-    return (isClamped(row, 0, height()) && isClamped(col, 0, width()));
+    return (isBound(row, 0, height()) && isBound(col, 0, width()));
   } // isIndex(int, int)
 
   /**
@@ -523,11 +523,11 @@ public class MatrixV0<T> implements Matrix<T> {
    *   The exclusive parameter.
    * @return If the arg is between the two other integers.
    */
-  private boolean isClamped(int arg, int floor, int ceil) {
+  private boolean isBound(int arg, int floor, int ceil) {
     if (floor < ceil) {
       return ((arg >= floor) && (arg < ceil));
     } else {
       return ((arg <= floor) && (arg > ceil));
     } // if / else
-  } // isClamped(int, int, int)
+  } // isBound(int, int, int)
 } // class MatrixV0
