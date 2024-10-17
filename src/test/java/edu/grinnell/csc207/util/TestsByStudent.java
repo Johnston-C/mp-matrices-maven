@@ -142,5 +142,5 @@ public class TestsByStudent {
       fail("Correct parameter length (2 Strings) resulted in error.");
     }
     assertEquals(matZA, matZB);
-  } // johnstonCadeTest3()
+  } // johnstonCadeEdge1()
 } // TestsByStudent
