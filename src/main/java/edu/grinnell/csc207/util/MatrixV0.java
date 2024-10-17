@@ -401,19 +401,23 @@ public class MatrixV0<T> implements Matrix<T> {
   public void fillLine(int startRow, int startCol, int deltaRow, int deltaCol,
       int endRow, int endCol, T val) {
     int n = 0;
-    if (makeBoundsException(startRow, startCol, endRow, endCol)) {
-      if ((deltaRow == 0) && (deltaCol == 0)) {
-        set(startRow, startCol, val);
+    if ((width() != 0) && (height() != 0)) {
+      if (makeBoundsException(startRow, startCol, endRow, endCol)) {
+        if ((deltaRow == 0) && (deltaCol == 0)) {
+          set(startRow, startCol, val);
+        } else {
+          while (isBound(startRow + n * deltaRow, startRow, endRow)
+                && isBound(startCol + n * deltaCol, startCol, endCol)) {
+            set(startRow + n * deltaRow, startCol + n * deltaCol, val);
+            n++;
+          } // while
+        } // if / else
       } else {
-        while (isBound(startRow + n * deltaRow, startRow, endRow)
-               && isBound(startCol + n * deltaCol, startCol, endCol)) {
-          set(startRow + n * deltaRow, startCol + n * deltaCol, val);
-          n++;
-        } // while
+        throw new IndexOutOfBoundsException("Indecies exceed bounds of array.");
       } // if / else
     } else {
-      throw new IndexOutOfBoundsException("Indecies exceed bounds of array.");
-    } // if / else
+      // Do nothing
+    }
   } // fillLine(int, int, int, int, int, int, T)
 
   /**
