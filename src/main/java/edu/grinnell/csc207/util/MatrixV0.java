@@ -415,9 +415,8 @@ public class MatrixV0<T> implements Matrix<T> {
       } else {
         throw new IndexOutOfBoundsException("Indecies exceed bounds of array.");
       } // if / else
-    } else {
-      // Do nothing
-    }
+    } // if
+    // Do nothing if the if fails
   } // fillLine(int, int, int, int, int, int, T)
 
   /**
