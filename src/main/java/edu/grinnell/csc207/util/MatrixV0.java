@@ -50,6 +50,12 @@ public class MatrixV0<T> implements Matrix<T> {
   public MatrixV0(int width, int height, T def) {
     this.w = width;
     this.h = height;
+    if (width() < 0) {
+      throw new NegativeArraySizeException("Width " + width() + "is negative.");
+    } // if
+    if (height() < 0) {
+      throw new NegativeArraySizeException("Height " + height() + "is negative.");
+    } // if
     this.defOut = def;
     this.contents = (T[][]) new Object[height()][];
     for (int i = 0; i < height(); i++) {
@@ -91,7 +97,7 @@ public class MatrixV0<T> implements Matrix<T> {
    *   If either the row or column is out of reasonable bounds.
    */
   public T get(int row, int col) {
-    if (isIndex(row, col)) {
+    if (isIndexException(row, col)) {
       return this.contents[row][col];
     } else {
       throw new IndexOutOfBoundsException("Indecies exceed bounds of array.");
@@ -112,7 +118,7 @@ public class MatrixV0<T> implements Matrix<T> {
    *   If either the row or column is out of reasonable bounds.
    */
   public void set(int row, int col, T val) {
-    if (isIndex(row, col)) {
+    if (isIndexException(row, col)) {
       this.contents[row][col] = val;
     } else {
       throw new IndexOutOfBoundsException("Indecies exceed bounds of array.");
@@ -153,7 +159,7 @@ public class MatrixV0<T> implements Matrix<T> {
       initializeRow(height() - 1);
       bubbleRow(height() - 1, row);
     } else {
-      throw new IndexOutOfBoundsException("Index exceeds bounds of array.");
+      throw new IndexOutOfBoundsException("Index " + row + " out of bounds for length " + height());
     } // if / else
   } // insertRow(int)
 
@@ -199,7 +205,7 @@ public class MatrixV0<T> implements Matrix<T> {
       initializeCol(width() - 1);
       bubbleCol(width() - 1, col);
     } else {
-      throw new IndexOutOfBoundsException("Index exceeds bounds of array.");
+      throw new IndexOutOfBoundsException("Index " + col + " out of bounds for length " + width());
     } // if / else
   } // insertCol(int)
 
@@ -223,7 +229,7 @@ public class MatrixV0<T> implements Matrix<T> {
         set(r, col, vals[r]);
       } // for [r]
     } else {
-      throw new ArraySizeException("Length of values does not match width.");
+      throw new ArraySizeException("Length of values does not match height.");
     } // if / else
   } // insertCol(int, T[])
 
@@ -242,7 +248,7 @@ public class MatrixV0<T> implements Matrix<T> {
       this.h--;
       this.contents = Arrays.copyOf(this.contents, height());
     } else {
-      throw new IndexOutOfBoundsException("Index exceeds bounds of array.");
+      throw new IndexOutOfBoundsException("Index " + row + " out of bounds for length " + height());
     } // if / else
   } // deleteRow(int)
 
@@ -263,12 +269,12 @@ public class MatrixV0<T> implements Matrix<T> {
         this.contents[r] = Arrays.copyOf(this.contents[r], width());
       } // for [r]
     } else {
-      throw new IndexOutOfBoundsException("Index exceeds bounds of array.");
+      throw new IndexOutOfBoundsException("Index " + col + " out of bounds for length " + width());
     } // if / else
   } // deleteCol(int)
 
   /**
-   * Reset a row and fills it with the default value.
+   * Resets a row and fills it with the default value.
    *
    * @param row
    */
@@ -278,6 +284,12 @@ public class MatrixV0<T> implements Matrix<T> {
     fillLine(row, 0, 0, 1, height(), width(), this.defOut);
   } // initializeRow(int)
 
+  /**
+   * Move a row to destination, shifting all rows between.
+   *
+   * @param targetRow
+   * @param destination
+   */
   private void bubbleRow(int targetRow, int destination) {
     T[] tempRow;
     int delta;
@@ -294,7 +306,7 @@ public class MatrixV0<T> implements Matrix<T> {
   } // bubbleRow(int, int)
 
   /**
-   * Reset a col and fills it with the default value.
+   * Resets a col and fills it with the default value.
    *
    * @param col
    */
@@ -302,6 +314,12 @@ public class MatrixV0<T> implements Matrix<T> {
     fillLine(0, col, 1, 0, height(), width(), this.defOut);
   } // initializeCol(int)
 
+  /**
+   * Move a col to destination, shifting all cols between.
+   *
+   * @param targetCol
+   * @param destination
+   */
   private void bubbleCol(int targetCol, int destination) {
     T tempVal;
     int delta;
@@ -350,7 +368,7 @@ public class MatrixV0<T> implements Matrix<T> {
     } else {
       deltaC = -1;
     } // if / else
-    if (makeBounds(startRow, startCol, endRow, endCol)) {
+    if (makeBoundsException(startRow, startCol, endRow, endCol)) {
       for (int r = startRow; r != endRow; r += deltaR) {
         fillLine(r, startCol, 0, deltaC, height(), endCol, val);
       } // for [r]
@@ -382,11 +400,11 @@ public class MatrixV0<T> implements Matrix<T> {
    */
   public void fillLine(int startRow, int startCol, int deltaRow, int deltaCol,
       int endRow, int endCol, T val) {
-    if (makeBounds(startRow, startCol, endRow, endCol)) {
+    int n = 0;
+    if (makeBoundsException(startRow, startCol, endRow, endCol)) {
       if ((deltaRow == 0) && (deltaCol == 0)) {
         set(startRow, startCol, val);
       } else {
-        int n = 0;
         while (isBound(startRow + n * deltaRow, startRow, endRow)
                && isBound(startCol + n * deltaCol, startCol, endCol)) {
           set(startRow + n * deltaRow, startCol + n * deltaCol, val);
@@ -480,9 +498,13 @@ public class MatrixV0<T> implements Matrix<T> {
    *   The exclusive row
    * @param endCol
    *   The exclusive column
+   *
    * @return If the coordinates make a valid bounded area.
+   *
+   * @throw IndexOutOfBoundsException
+   *   If the rows or columns are inappropriate.
    */
-  private boolean makeBounds(int startRow, int startCol, int endRow, int endCol) {
+  private boolean makeBoundsException(int startRow, int startCol, int endRow, int endCol) {
     int deltaR;
     int deltaC;
     if (endRow > startRow) {
@@ -495,7 +517,8 @@ public class MatrixV0<T> implements Matrix<T> {
     } else {
       deltaC = -1;
     } // if / else
-    return (isIndex(startRow, startCol) && isIndex(endRow - deltaR, endCol - deltaC));
+    return (isIndexException(startRow, startCol)
+            && isIndexException(endRow - deltaR, endCol - deltaC));
   } // makeBounds(int, int, int, int)
 
   /**
@@ -505,11 +528,24 @@ public class MatrixV0<T> implements Matrix<T> {
    *   The row part of the index.
    * @param col
    *   The column part of the index.
+   *
    * @return If the coordinates reference a valid index.
+   *
+   * @throw IndexOutOfBoundsException
+   *   If the rows or columns are inappropriate.
    */
-  private boolean isIndex(int row, int col) {
-    return (isBound(row, 0, height()) && isBound(col, 0, width()));
-  } // isIndex(int, int)
+  private boolean isIndexException(int row, int col) {
+    if (isBound(row, 0, height())) {
+      if (isBound(col, 0, width())) {
+        return true;
+      } else {
+        throw new IndexOutOfBoundsException("Index " + col
+                                            + " out of bounds for length " + width());
+      } // if / else
+    } else {
+      throw new IndexOutOfBoundsException("Index " + row + " out of bounds for length " + height());
+    } // if / else
+  } // isIndexException(int, int)
 
   /**
    * Determine if an integer is between two integers, first
@@ -521,6 +557,7 @@ public class MatrixV0<T> implements Matrix<T> {
    *   The inclusive parameter.
    * @param ceil
    *   The exclusive parameter.
+   *
    * @return If the arg is between the two other integers.
    */
   private boolean isBound(int arg, int floor, int ceil) {
